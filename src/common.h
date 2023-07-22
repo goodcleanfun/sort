@@ -1,6 +1,3 @@
-#ifndef SORTING_COMMON_H
-#define SORTING_COMMON_H
-
 /* The MIT License
 
    Copyright (c) 2008, 2011 Attractive Chaos <attractor@live.co.uk>
