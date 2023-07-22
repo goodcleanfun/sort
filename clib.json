@@ -1,0 +1,17 @@
+{
+  "name": "sorting",
+  "version": "0.1.0",
+  "repo": "goodcleanfun/sorting",
+  "description": "Generic header-only sorting routines in C",
+  "keywords": ["sorting", "array", "generic"],
+  "license": "MIT",
+  "src": [
+      "src/common.h",
+      "src/heap.h",
+      "src/introsort.h",
+      "src/ksmall.h",
+      "src/mergesort.h",
+      "src/radixsort.h",
+      "src/shuffle.h"
+  ]
+}
