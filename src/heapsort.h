@@ -67,7 +67,7 @@
 #include <string.h>
 #include "common.h"
 
-#define HEAP_INIT(name, type_t, __sort_lt)								    \
+#define HEAPSORT_INIT(name, type_t, __sort_lt)								    \
 	static inline void ks_heapadjust_##name(size_t i, size_t n, type_t l[])	\
 	{																	    \
 		size_t k = i;													    \
@@ -98,7 +98,7 @@
 #define ks_heapmake(name, n, a) ks_heapmake_##name(n, a)
 #define ks_heapadjust(name, i, n, a) ks_heapadjust_##name(i, n, a)
 
-#define HEAP_INIT_GENERIC(type_t) HEAP_INIT(type_t, type_t, ks_lt_generic)
-#define HEAP_INIT_STR HEAP_INIT(str, ksstr_t, ks_lt_str)
+#define HEAPSORT_INIT_GENERIC(type_t) HEAPSORT_INIT(type_t, type_t, ks_lt_generic)
+#define HEAPSORT_INIT_STR HEAPSORT_INIT(str, ksstr_t, ks_lt_str)
 
 #endif

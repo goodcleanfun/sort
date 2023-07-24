@@ -7,7 +7,7 @@
   "license": "MIT",
   "src": [
       "src/common.h",
-      "src/heap.h",
+      "src/heapsort.h",
       "src/introsort.h",
       "src/ksmall.h",
       "src/mergesort.h",
