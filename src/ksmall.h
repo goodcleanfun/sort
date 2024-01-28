@@ -66,39 +66,74 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define KSMALL_SWAP(type_t, a, b) { register type_t t=(a); (a)=(b); (b)=t; }
-
-
-
-#define KSMALL_INIT(name, type_t, __sort_lt)								    \
-	/* This function is adapted from: http://ndevilla.free.fr/median/ */        \
-	/* 0 <= kk < n */													        \
-	static inline type_t KSMALL_FUNC(ksmall)(size_t n, type_t arr[], size_t kk)    \
-	{																	        \
-		type_t *low, *high, *k, *ll, *hh, *mid;							        \
-		low = arr; high = arr + n - 1; k = arr + kk;					        \
-		for (;;) {														        \
-			if (high <= low) return *k;									        \
-			if (high == low + 1) {										        \
-				if (__sort_lt(*high, *low)) KSORT_SWAP(type_t, *low, *high);    \
-				return *k;												        \
-			}															        \
-			mid = low + (high - low) / 2;								        \
-			if (__sort_lt(*high, *mid)) KSORT_SWAP(type_t, *mid, *high);        \
-			if (__sort_lt(*high, *low)) KSORT_SWAP(type_t, *low, *high);        \
-			if (__sort_lt(*low, *mid)) KSORT_SWAP(type_t, *mid, *low);	        \
-			KSORT_SWAP(type_t, *mid, *(low+1));							        \
-			ll = low + 1; hh = high;									        \
-			for (;;) {													        \
-				do ++ll; while (__sort_lt(*ll, *low));					        \
-				do --hh; while (__sort_lt(*low, *hh));					        \
-				if (hh < ll) break;										        \
-				KSORT_SWAP(type_t, *ll, *hh);							        \
-			}															        \
-			KSORT_SWAP(type_t, *low, *hh);								        \
-			if (hh <= k) low = ll;										        \
-			if (hh >= k) high = hh - 1;									        \
-		}																        \
-	}
-
 #endif
+
+#ifndef KSMALL_TYPE
+#error "KSMALL_TYPE must be defined"
+#endif
+
+#ifndef KSMALL_NAME
+#define KSMALL_NAME KSMALL_TYPE
+#endif
+
+#ifndef KSMALL_SWAP
+#define KSMALL_SWAP(KSMALL_TYPE, a, b) { register KSMALL_TYPE t=(a); (a)=(b); (b)=t; }
+#define KSMALL_SWAP_DEFINED
+#endif
+
+#ifndef KSMALL_LT
+#if !defined(KSMALL_STR)
+#define KSMALL_LT(a, b) ((a) < (b))
+#else
+#define KSMALL_LT(a, b) (strcmp((a), (b)) < 0)
+#endif
+#define KSMALL_LT_DEFINED
+#endif
+
+#define KSMALL_CONCAT_(a, b) a ## b
+#define KSMALL_CONCAT(a, b) KSMALL_CONCAT_(a, b)
+#define KSMALL_FUNC(name) KSMALL_CONCAT(name##_, KSMALL_NAME)
+
+/* This function is adapted from: http://ndevilla.free.fr/median/ */
+/* 0 <= kk < n */
+static inline KSMALL_TYPE KSMALL_FUNC(ksmall)(size_t n, KSMALL_TYPE arr[], size_t kk)
+{
+	KSMALL_TYPE *low, *high, *k, *ll, *hh, *mid;
+	low = arr; high = arr + n - 1; k = arr + kk;
+	for (;;) {
+		if (high <= low) return *k;
+		if (high == low + 1) {
+			if (KSMALL_LT(*high, *low)) KSMALL_SWAP(KSMALL_TYPE, *low, *high);
+			return *k;
+		}
+		mid = low + (high - low) / 2;
+		if (KSMALL_LT(*high, *mid)) KSMALL_SWAP(KSMALL_TYPE, *mid, *high);
+		if (KSMALL_LT(*high, *low)) KSMALL_SWAP(KSMALL_TYPE, *low, *high);
+		if (KSMALL_LT(*low, *mid)) KSMALL_SWAP(KSMALL_TYPE, *mid, *low);
+		KSMALL_SWAP(KSMALL_TYPE, *mid, *(low+1));
+		ll = low + 1; hh = high;
+		for (;;) {
+			do ++ll; while (KSMALL_LT(*ll, *low));
+			do --hh; while (KSMALL_LT(*low, *hh));
+			if (hh < ll) break;
+			KSMALL_SWAP(KSMALL_TYPE, *ll, *hh);
+		}
+		KSMALL_SWAP(KSMALL_TYPE, *low, *hh);
+		if (hh <= k) low = ll;
+		if (hh >= k) high = hh - 1;
+	}
+}
+
+#ifdef KSMALL_LT_DEFINED
+#undef KSMALL_LT
+#undef KSMALL_LT_DEFINED
+#endif
+
+#ifdef KSMALL_SWAP_DEFINED
+#undef KSMALL_SWAP
+#undef KSMALL_SWAP_DEFINED
+#endif
+
+#undef KSMALL_CONCAT_
+#undef KSMALL_CONCAT
+#undef KSMALL_FUNC

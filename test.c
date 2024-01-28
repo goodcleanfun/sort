@@ -8,6 +8,9 @@
 #define INTROSORT_TYPE int
 #include "introsort.h"
 
+#define KSMALL_TYPE int
+#include "ksmall.h"
+
 #define MERGESORT_TYPE int
 #include "mergesort.h"
 
@@ -62,6 +65,15 @@ TEST test_radix_sort(void) {
     PASS();
 }
 
+TEST test_ksmall(void) {
+    int a[] = {9, 4, 3, 5, 2, 1, 6, 7, 10, 8, 16, 12, 13, 15, 14, 11};
+    size_t n = sizeof(a) / sizeof(int);
+    int k = n / 2;
+    int ksmall = ksmall_int(n, a, k);
+    ASSERT_EQ(ksmall, k + 1);
+    PASS();
+}
+
 TEST test_shuffle(void) {
     int a[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 
                10, 11, 12, 13, 14, 15, 16};
@@ -79,6 +91,7 @@ int main(int argc, char **argv) {
 
     RUN_TEST(test_heapsort);
     RUN_TEST(test_introsort);
+    RUN_TEST(test_ksmall);
     RUN_TEST(test_mergesort);
     RUN_TEST(test_radix_sort);
     RUN_TEST(test_shuffle);
