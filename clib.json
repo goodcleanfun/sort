@@ -5,8 +5,10 @@
   "description": "Generic header-only sorting routines in C",
   "keywords": ["sorting", "array", "generic"],
   "license": "MIT",
+  "development": {
+    "silentbicycle/greatest": "*"
+  },
   "src": [
-      "src/common.h",
       "src/heapsort.h",
       "src/introsort.h",
       "src/ksmall.h",
