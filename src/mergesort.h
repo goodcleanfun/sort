@@ -65,61 +65,103 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "common.h"
-
-#define MERGESORT_INIT(name, type_t, __sort_lt)								        \
-	static inline void ks_mergesort_##name(size_t n, type_t array[], type_t temp[])	\
-	{																	            \
-		type_t *a2[2], *a, *b;											            \
-		int curr, shift;												            \
-																		            \
-		a2[0] = array;													            \
-		a2[1] = temp? temp : (type_t*)malloc(sizeof(type_t) * n);		            \
-		for (curr = 0, shift = 0; (1ul<<shift) < n; ++shift) {			            \
-			a = a2[curr]; b = a2[1-curr];								            \
-			if (shift == 0) {											            \
-				type_t *p = b, *i, *eb = a + n;							            \
-				for (i = a; i < eb; i += 2) {							            \
-					if (i == eb - 1) *p++ = *i;							            \
-					else {												            \
-						if (__sort_lt(*(i+1), *i)) {					            \
-							*p++ = *(i+1); *p++ = *i;					            \
-						} else {										            \
-							*p++ = *i; *p++ = *(i+1);					            \
-						}												            \
-					}													            \
-				}														            \
-			} else {													            \
-				size_t i, step = 1ul<<shift;							            \
-				for (i = 0; i < n; i += step<<1) {						            \
-					type_t *p, *j, *k, *ea, *eb;						            \
-					if (n < i + step) {									            \
-						ea = a + n; eb = a;								            \
-					} else {											            \
-						ea = a + i + step;								            \
-						eb = a + (n < i + (step<<1)? n : i + (step<<1));            \
-					}													            \
-					j = a + i; k = a + i + step; p = b + i;				            \
-					while (j < ea && k < eb) {							            \
-						if (__sort_lt(*k, *j)) *p++ = *k++;				            \
-						else *p++ = *j++;								            \
-					}													            \
-					while (j < ea) *p++ = *j++;							            \
-					while (k < eb) *p++ = *k++;							            \
-				}														            \
-			}															            \
-			curr = 1 - curr;											            \
-		}																            \
-		if (curr == 1) {												            \
-			type_t *p = a2[0], *i = a2[1], *eb = array + n;				            \
-			for (; p < eb; ++i) *p++ = *i;								            \
-		}																            \
-		if (temp == 0) free(a2[1]);										            \
-	}
-
-#define ks_mergesort(name, n, a, t) ks_mergesort_##name(n, a, t)
-
-#define MERGESORT_INIT_GENERIC(type_t) MERGESORT_INIT(type_t, type_t, ks_lt_generic)
-#define MERGESORT_INIT_STR MERGESORT_INIT(str, ksstr_t, ks_lt_str)
 
 #endif
+
+#ifndef MERGESORT_TYPE
+#error "Must define MERGESORT_TYPE"
+#endif
+
+#ifndef MERGESORT_NAME
+#define MERGESORT_NAME MERGESORT_TYPE
+#endif
+
+#ifndef MERGESORT_LT
+#if !defined(MERGESORT_STR) && !defined(MERGESORT_AUX_TYPE)
+#define MERGESORT_LT(a, b) ((a) < (b))
+#elif !defined(MERGESORT_STR) && defined(MERGESORT_AUX_TYPE)
+#define MERGESORT_LT(a, b, aux) (((aux)[(a)] < (aux)[(b)]))
+#elif defined(MERGESORT_STR) && !defined(MERGESORT_AUX_TYPE)
+#define MERGESORT_LT(a, b) (strcmp((a), (b)) < 0)
+#else
+#define MERGESORT_LT(a, b, aux) (strcmp((aux)[(a)], (aux)[(b)]) < 0)
+#endif
+#define MERGESORT_LT_DEFINED
+#endif
+
+#define MERGESORT_CONCAT_(a, b) a ## b
+#define MERGESORT_CONCAT(a, b) MERGESORT_CONCAT_(a, b)
+#define MERGESORT_FUNC(name) MERGESORT_CONCAT(name##_, MERGESORT_NAME)
+
+static inline void MERGESORT_FUNC(mergesort)(size_t n, MERGESORT_TYPE array[], MERGESORT_TYPE temp[])
+{
+	MERGESORT_TYPE *a2[2], *a, *b;
+	int curr, shift;
+
+	a2[0] = array;
+	a2[1] = temp? temp : (MERGESORT_TYPE*)malloc(sizeof(MERGESORT_TYPE) * n);
+	for (curr = 0, shift = 0; (1ul<<shift) < n; ++shift) {
+		a = a2[curr]; b = a2[1-curr];
+		if (shift == 0) {
+			MERGESORT_TYPE *p = b, *i, *eb = a + n;
+			for (i = a; i < eb; i += 2) {
+				if (i == eb - 1) *p++ = *i;
+				else {
+					#ifndef MERGESORT_AUX_TYPE
+					if (MERGESORT_LT(*(i+1), *i))
+					#else
+					if (MERGESORT_LT(*(i+1), *i, aux))
+					#endif
+					{
+					
+						*p++ = *(i+1); *p++ = *i;
+					} else {
+						*p++ = *i; *p++ = *(i+1);
+					}
+				}
+			}
+		} else {
+			size_t i, step = 1ul<<shift;
+			for (i = 0; i < n; i += step<<1) {
+				MERGESORT_TYPE *p, *j, *k, *ea, *eb;
+				if (n < i + step) {
+					ea = a + n; eb = a;
+				} else {
+					ea = a + i + step;
+					eb = a + (n < i + (step<<1)? n : i + (step<<1));
+				}
+				j = a + i; k = a + i + step; p = b + i;
+				while (j < ea && k < eb) {
+					#ifndef MERGESORT_AUX_TYPE
+					if (MERGESORT_LT(*k, *j))
+					#else
+					if (MERGESORT_LT(*k, *j, aux))
+					#endif
+					{
+						*p++ = *k++;
+					} else {
+						*p++ = *j++;
+					}
+				}
+				while (j < ea) *p++ = *j++;
+				while (k < eb) *p++ = *k++;
+			}
+		}
+		curr = 1 - curr;
+	}
+	if (curr == 1) {
+		MERGESORT_TYPE *p = a2[0], *i = a2[1], *eb = array + n;
+		for (; p < eb; ++i) *p++ = *i;
+	}
+	if (temp == 0) free(a2[1]);
+}
+
+
+#undef MERGESORT_CONCAT_
+#undef MERGESORT_CONCAT
+#undef MERGESORT_FUNC
+
+#ifdef MERGESORT_LT_DEFINED
+#undef MERGESORT_LT
+#endif
+#undef MERGESORT_LT_DEFINED

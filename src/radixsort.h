@@ -60,65 +60,101 @@
 
 */
 
-#ifndef AC_KSORT_H
-#define AC_KSORT_H
+#ifndef RADIX_SORT_H
+#define RADIX_SORT_H
 
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
-#define RS_MIN_SIZE 64
-#define RS_MAX_BITS 8
-
-#define RADIX_SORT_INIT(name, rstype_t, rskey, sizeof_key) \
-	typedef struct { \
-		rstype_t *b, *e; \
-	} rsbucket_##name##_t; \
-	static inline void rs_insertsort_##name(rstype_t *beg, rstype_t *end) \
-	{ \
-		rstype_t *i; \
-		for (i = beg + 1; i < end; ++i) \
-			if (rskey(*i) < rskey(*(i - 1))) { \
-				rstype_t *j, tmp = *i; \
-				for (j = i; j > beg && rskey(tmp) < rskey(*(j-1)); --j) \
-					*j = *(j - 1); \
-				*j = tmp; \
-			} \
-	} \
-	static inline void rs_sort_##name(rstype_t *beg, rstype_t *end, int n_bits, int s) \
-	{ \
-		rstype_t *i; \
-		int size = 1<<n_bits, m = size - 1; \
-		rsbucket_##name##_t *k, b[1<<RS_MAX_BITS], *be = b + size; \
-		assert(n_bits <= RS_MAX_BITS); \
-		for (k = b; k != be; ++k) k->b = k->e = beg; \
-		for (i = beg; i != end; ++i) ++b[rskey(*i)>>s&m].e; \
-		for (k = b + 1; k != be; ++k) \
-			k->e += (k-1)->e - beg, k->b = (k-1)->e; \
-		for (k = b; k != be;) { \
-			if (k->b != k->e) { \
-				rsbucket_##name##_t *l; \
-				if ((l = b + (rskey(*k->b)>>s&m)) != k) { \
-					rstype_t tmp = *k->b, swap; \
-					do { \
-						swap = tmp; tmp = *l->b; *l->b++ = swap; \
-						l = b + (rskey(tmp)>>s&m); \
-					} while (l != k); \
-					*k->b++ = tmp; \
-				} else ++k->b; \
-			} else ++k; \
-		} \
-		for (b->b = beg, k = b + 1; k != be; ++k) k->b = (k-1)->e; \
-		if (s) { \
-			s = s > n_bits? s - n_bits : 0; \
-			for (k = b; k != be; ++k) \
-				if (k->e - k->b > RS_MIN_SIZE) rs_sort_##name(k->b, k->e, n_bits, s); \
-				else if (k->e - k->b > 1) rs_insertsort_##name(k->b, k->e); \
-		} \
-	} \
-	static inline void radix_sort_##name(rstype_t *beg, rstype_t *end) \
-	{ \
-		if (end - beg <= RS_MIN_SIZE) rs_insertsort_##name(beg, end); \
-		else rs_sort_##name(beg, end, RS_MAX_BITS, (sizeof_key - 1) * RS_MAX_BITS); \
-	}
+#define RADIS_SORT_MIN_SIZE 64
+#define RADIS_SORT_MAX_BITS 8
 
 #endif
+
+#ifndef RADIX_SORT_TYPE
+#error "Must define RADIX_SORT_TYPE"
+#endif
+
+#ifndef RADIX_SORT_NAME
+#define RADIX_SORT_NAME RADIX_SORT_TYPE
+#endif
+
+#ifndef RADIX_SORT_KEY
+#define RADIX_SORT_KEY(x) (x)
+#endif
+
+#ifndef RADIX_SORT_KEY_SIZE
+#define RADIX_SORT_KEY_SIZE sizeof(RADIX_SORT_TYPE)
+#endif
+
+#define RADIX_SORT_CONCAT_(a, b) a ## b
+#define RADIX_SORT_CONCAT(a, b) RADIX_SORT_CONCAT_(a, b)
+#define RADIX_SORT_FUNC(name) RADIX_SORT_CONCAT(name##_, RADIX_SORT_NAME)
+
+#define RADIX_SORT_BUCKET_TYPE RADIX_SORT_CONCAT(RADIX_SORT_NAME, _bucket_t)
+
+typedef struct {
+	RADIX_SORT_TYPE *b, *e;
+} RADIX_SORT_BUCKET_TYPE;
+
+static inline void RADIX_SORT_FUNC(rs_insertsort)(RADIX_SORT_TYPE *beg, RADIX_SORT_TYPE *end)
+{
+	RADIX_SORT_TYPE *i;
+	for (i = beg + 1; i < end; ++i) {
+		if (RADIX_SORT_KEY(*i) < RADIX_SORT_KEY(*(i - 1))) {
+			RADIX_SORT_TYPE *j, tmp = *i;
+			for (j = i; j > beg && RADIX_SORT_KEY(tmp) < RADIX_SORT_KEY(*(j-1)); --j)
+				*j = *(j - 1);
+			*j = tmp;
+		}
+	}
+}
+
+static inline void RADIX_SORT_FUNC(rs_sort)(RADIX_SORT_TYPE *beg, RADIX_SORT_TYPE *end, int n_bits, int s)
+{
+	RADIX_SORT_TYPE *i;
+	int size = 1<<n_bits, m = size - 1;
+	RADIX_SORT_BUCKET_TYPE *k, b[1<<RADIS_SORT_MAX_BITS], *be = b + size;
+	assert(n_bits <= RADIS_SORT_MAX_BITS);
+	for (k = b; k != be; ++k) k->b = k->e = beg;
+	for (i = beg; i != end; ++i) ++b[RADIX_SORT_KEY(*i)>>s&m].e;
+	for (k = b + 1; k != be; ++k) {
+		k->e += (k-1)->e - beg, k->b = (k-1)->e;
+	}
+	for (k = b; k != be;) {
+		if (k->b != k->e) {
+			RADIX_SORT_BUCKET_TYPE *l;
+			if ((l = b + (RADIX_SORT_KEY(*k->b)>>s&m)) != k) {
+				RADIX_SORT_TYPE tmp = *k->b, swap;
+				do {
+					swap = tmp; tmp = *l->b; *l->b++ = swap;
+					l = b + (RADIX_SORT_KEY(tmp)>>s&m);
+				} while (l != k);
+				*k->b++ = tmp;
+			} else ++k->b;
+		} else ++k;
+	}
+	for (b->b = beg, k = b + 1; k != be; ++k) k->b = (k-1)->e;
+	if (s) {
+		s = s > n_bits? s - n_bits : 0;
+		for (k = b; k != be; ++k)
+			if (k->e - k->b > RADIS_SORT_MIN_SIZE) RADIX_SORT_FUNC(rs_sort)(k->b, k->e, n_bits, s);
+			else if (k->e - k->b > 1) RADIX_SORT_FUNC(rs_insertsort)(k->b, k->e);
+	}
+}
+
+static inline void RADIX_SORT_FUNC(radix_sort)(RADIX_SORT_TYPE *beg, RADIX_SORT_TYPE *end)
+{
+	if (end - beg <= RADIS_SORT_MIN_SIZE) RADIX_SORT_FUNC(rs_insertsort)(beg, end);
+	else RADIX_SORT_FUNC(rs_sort)(beg, end, RADIS_SORT_MAX_BITS, (RADIX_SORT_KEY_SIZE - 1) * RADIS_SORT_MAX_BITS);
+}
+
+#undef RADIX_SORT_CONCAT_
+#undef RADIX_SORT_CONCAT
+#undef RADIX_SORT_FUNC
+
+#ifdef RADIX_SORT_LT_DEFINED
+#undef RADIX_SORT_LT
+#endif
+#undef RADIX_SORT_LT_DEFINED

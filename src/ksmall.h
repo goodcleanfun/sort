@@ -65,14 +65,15 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "common.h"
 
-#define KSORT_SWAP(type_t, a, b) { register type_t t=(a); (a)=(b); (b)=t; }
+#define KSMALL_SWAP(type_t, a, b) { register type_t t=(a); (a)=(b); (b)=t; }
+
+
 
 #define KSMALL_INIT(name, type_t, __sort_lt)								    \
 	/* This function is adapted from: http://ndevilla.free.fr/median/ */        \
 	/* 0 <= kk < n */													        \
-	static inline type_t ks_ksmall_##name(size_t n, type_t arr[], size_t kk)    \
+	static inline type_t KSMALL_FUNC(ksmall)(size_t n, type_t arr[], size_t kk)    \
 	{																	        \
 		type_t *low, *high, *k, *ll, *hh, *mid;							        \
 		low = arr; high = arr + n - 1; k = arr + kk;					        \
@@ -99,10 +100,5 @@
 			if (hh >= k) high = hh - 1;									        \
 		}																        \
 	}
-
-#define ks_ksmall(name, n, a, k) ks_ksmall_##name(n, a, k)
-
-#define KSMALL_INIT_GENERIC(type_t) KSMALL_INIT(type_t, type_t, ks_lt_generic)
-#define KSMALL_INIT_STR KSMALL_INIT(str, ksstr_t, ks_lt_str)
 
 #endif

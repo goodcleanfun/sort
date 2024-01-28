@@ -65,40 +65,74 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "common.h"
-
-#define HEAPSORT_INIT(name, type_t, __sort_lt)								    \
-	static inline void ks_heapadjust_##name(size_t i, size_t n, type_t l[])	\
-	{																	    \
-		size_t k = i;													    \
-		type_t tmp = l[i];												    \
-		while ((k = (k << 1) + 1) < n) {								    \
-			if (k != n - 1 && __sort_lt(l[k], l[k+1])) ++k;				    \
-			if (__sort_lt(l[k], tmp)) break;							    \
-			l[i] = l[k]; i = k;											    \
-		}																    \
-		l[i] = tmp;														    \
-	}																	    \
-	static inline void ks_heapmake_##name(size_t lsize, type_t l[])	        \
-	{																	    \
-		size_t i;														    \
-		for (i = (lsize >> 1) - 1; i != (size_t)(-1); --i)				    \
-			ks_heapadjust_##name(i, lsize, l);							    \
-	}																	    \
-	static inline void ks_heapsort_##name(size_t lsize, type_t l[])		    \
-	{																	    \
-		size_t i;														    \
-		for (i = lsize - 1; i > 0; --i) {								    \
-			type_t tmp;													    \
-			tmp = *l; *l = l[i]; l[i] = tmp; ks_heapadjust_##name(0, i, l); \
-		}																    \
-	}
-
-#define ks_heapsort(name, n, a) ks_heapsort_##name(n, a)
-#define ks_heapmake(name, n, a) ks_heapmake_##name(n, a)
-#define ks_heapadjust(name, i, n, a) ks_heapadjust_##name(i, n, a)
-
-#define HEAPSORT_INIT_GENERIC(type_t) HEAPSORT_INIT(type_t, type_t, ks_lt_generic)
-#define HEAPSORT_INIT_STR HEAPSORT_INIT(str, ksstr_t, ks_lt_str)
 
 #endif
+
+#ifndef HEAPSORT_TYPE
+#error "Must define HEAPSORT_TYPE"
+#endif
+
+#ifndef HEAPSORT_NAME
+#define HEAPSORT_NAME HEAPSORT_TYPE
+#endif
+
+#ifndef HEAPSORT_LT
+#if !defined(HEAPSORT_STR) && !defined(HEAPSORT_AUX_TYPE)
+#define HEAPSORT_LT(a, b) ((a) < (b))
+#elif !defined(HEAPSORT_STR) && defined(HEAPSORT_AUX_TYPE)
+#define HEAPSORT_LT(a, b, aux) (((aux)[(a)] < (aux)[(b)]))
+#elif defined(HEAPSORT_STR) && !defined(HEAPSORT_AUX_TYPE)
+#define HEAPSORT_LT(a, b) (strcmp((a), (b)) < 0)
+#else
+#define HEAPSORT_LT(a, b, aux) (strcmp((aux)[(a)], (aux)[(b)]) < 0)
+#endif
+#define HEAPSORT_LT_DEFINED
+#endif
+
+#define HEAPSORT_CONCAT_(a, b) a ## b
+#define HEAPSORT_CONCAT(a, b) HEAPSORT_CONCAT_(a, b)
+#define HEAPSORT_FUNC(name) HEAPSORT_CONCAT(name##_, HEAPSORT_NAME)
+
+
+static inline void HEAPSORT_FUNC(heapadjust)(size_t i, size_t n, HEAPSORT_TYPE l[])
+{
+	size_t k = i;
+	HEAPSORT_TYPE tmp = l[i];
+	while ((k = (k << 1) + 1) < n) {
+		#ifndef HEAPSORT_AUX_TYPE
+		if (k != n - 1 && HEAPSORT_LT(l[k], l[k+1])) ++k;
+		if (HEAPSORT_LT(l[k], tmp)) break;
+		#else
+		if (k != n - 1 && HEAPSORT_LT(l[k], l[k+1], aux)) ++k;
+		if (HEAPSORT_LT(l[k], tmp, aux)) break;
+		#endif
+		l[i] = l[k]; i = k;
+	}
+	l[i] = tmp;
+}
+
+static inline void HEAPSORT_FUNC(heapmake)(size_t lsize, HEAPSORT_TYPE l[])
+{
+	size_t i;
+	for (i = (lsize >> 1) - 1; i != (size_t)(-1); --i)
+		HEAPSORT_FUNC(heapadjust)(i, lsize, l);
+}
+
+static inline void HEAPSORT_FUNC(heapsort)(size_t lsize, HEAPSORT_TYPE l[])
+{
+	size_t i;
+	for (i = lsize - 1; i > 0; --i) {
+		HEAPSORT_TYPE tmp;
+		tmp = *l; *l = l[i]; l[i] = tmp; HEAPSORT_FUNC(heapadjust)(0, i, l);
+	}
+}
+
+
+#undef HEAPSORT_CONCAT_
+#undef HEAPSORT_CONCAT
+#undef HEAPSORT_FUNC
+
+#ifdef HEAPSORT_LT_DEFINED
+#undef HEAPSORT_LT
+#endif
+#undef HEAPSORT_LT_DEFINED

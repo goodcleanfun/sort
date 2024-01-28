@@ -60,28 +60,48 @@
 
 */
 
-#ifndef AC_KSORT_H
-#define AC_KSORT_H
+#ifndef SHUFFLE_H
+#define SHUFFLE_H
 
 #include <stdlib.h>
 #include <string.h>
 
-#include "common.h"
+#if defined(_POSIX_VERSION)
+#include <unistd.h>
+#else
+#define srand48(x) srand((int)(x))
+#define drand48() ((double)rand()/RAND_MAX)
+#endif
 
-#define SHUFFLE_INIT(name, type_t, __sort_lt)							\
-	static inline void ks_shuffle_##name(size_t n, type_t a[])			\
-	{																	\
-		int i, j;														\
-		for (i = n; i > 1; --i) {										\
-			type_t tmp;													\
-			j = (int)(drand48() * i);									\
-			tmp = a[j]; a[j] = a[i-1]; a[i-1] = tmp;					\
-		}																\
+#endif
+
+#ifndef SHUFFLE_TYPE
+#error "SHUFFLE_TYPE must be defined"
+#endif
+
+#ifndef SHUFFLE_NAME
+#define SHUFFLE_NAME_DEFINED
+#define SHUFFLE_NAME SHUFFLE_TYPE
+#endif
+
+#define SHUFFLE_CONCAT_(a, b) a ## b
+#define SHUFFLE_CONCAT(a, b) SHUFFLE_CONCAT_(a, b)
+#define SHUFFLE_FUNC(name) SHUFFLE_CONCAT(SHUFFLE_NAME, _##name)
+
+static inline void SHUFFLE_FUNC(shuffle)(size_t n, SHUFFLE_TYPE a[])
+	{
+		int i, j;
+		for (i = n; i > 1; --i) {
+			SHUFFLE_TYPE tmp;
+			j = (int)(drand48() * i);
+			tmp = a[j]; a[j] = a[i-1]; a[i-1] = tmp;
+		}
 	}
 
-#define ks_shuffle(name, n, a) ks_shuffle_##name(n, a)
-
-#define SHUFFLE_INIT_GENERIC(type_t) SHUFFLE_INIT(type_t, type_t, ks_lt_generic)
-#define SHUFFLE_INIT_STR SHUFFLE_INIT(str, ksstr_t, ks_lt_str)
-
+#undef SHUFFLE_CONCAT_
+#undef SHUFFLE_CONCAT
+#undef SHUFFLE_FUNC
+#ifdef SHUFFLE_NAME_DEFINED
+#undef SHUFFLE_NAME
+#undef SHUFFLE_NAME_DEFINED
 #endif
