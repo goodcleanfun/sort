@@ -73,6 +73,7 @@
 #endif
 
 #ifndef MERGESORT_NAME
+#define MERGESORT_NAME_DEFINED
 #define MERGESORT_NAME MERGESORT_TYPE
 #endif
 
@@ -160,6 +161,11 @@ static inline void MERGESORT_FUNC(mergesort)(size_t n, MERGESORT_TYPE array[], M
 #undef MERGESORT_CONCAT_
 #undef MERGESORT_CONCAT
 #undef MERGESORT_FUNC
+
+#ifdef MERGESORT_NAME_DEFINED
+#undef MERGESORT_NAME
+#undef MERGESORT_NAME_DEFINED
+#endif
 
 #ifdef MERGESORT_LT_DEFINED
 #undef MERGESORT_LT

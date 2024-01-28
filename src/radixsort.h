@@ -77,6 +77,7 @@
 #endif
 
 #ifndef RADIX_SORT_NAME
+#define RADIX_SORT_NAME_DEFINED
 #define RADIX_SORT_NAME RADIX_SORT_TYPE
 #endif
 
@@ -153,6 +154,11 @@ static inline void RADIX_SORT_FUNC(radix_sort)(RADIX_SORT_TYPE *beg, RADIX_SORT_
 #undef RADIX_SORT_CONCAT_
 #undef RADIX_SORT_CONCAT
 #undef RADIX_SORT_FUNC
+
+#ifdef RADIX_SORT_NAME_DEFINED
+#undef RADIX_SORT_NAME
+#undef RADIX_SORT_NAME_DEFINED
+#endif
 
 #ifdef RADIX_SORT_LT_DEFINED
 #undef RADIX_SORT_LT

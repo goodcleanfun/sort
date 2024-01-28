@@ -41,6 +41,7 @@ typedef struct {
 #endif
 
 #ifndef INTROSORT_NAME
+#define INTROSORT_NAME_DEFINED
 #define INTROSORT_NAME INTROSORT_TYPE
 #endif
 
@@ -201,7 +202,12 @@ static inline void INTROSORT_FUNC(introsort)(size_t n, INTROSORT_TYPE a[], INTRO
 #undef INTROSORT_CONCAT
 #undef INTROSORT_FUNC
 
+#ifdef INTROSORT_NAME_DEFINED
+#undef INTROSORT_NAME
+#undef INTROSORT_NAME_DEFINED
+#endif
+
 #ifdef INTROSORT_LT_DEFINED
 #undef INTROSORT_LT
-#endif
 #undef INTROSORT_LT_DEFINED
+#endif

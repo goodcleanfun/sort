@@ -73,6 +73,7 @@
 #endif
 
 #ifndef HEAPSORT_NAME
+#define HEAPSORT_NAME_DEFINED
 #define HEAPSORT_NAME HEAPSORT_TYPE
 #endif
 
@@ -131,6 +132,11 @@ static inline void HEAPSORT_FUNC(heapsort)(size_t lsize, HEAPSORT_TYPE l[])
 #undef HEAPSORT_CONCAT_
 #undef HEAPSORT_CONCAT
 #undef HEAPSORT_FUNC
+
+#ifdef HEAPSORT_NAME_DEFINED
+#undef HEAPSORT_NAME
+#undef HEAPSORT_NAME_DEFINED
+#endif
 
 #ifdef HEAPSORT_LT_DEFINED
 #undef HEAPSORT_LT
