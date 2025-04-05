@@ -1,7 +1,7 @@
 {
-  "name": "sorting",
+  "name": "sort",
   "version": "0.2.2",
-  "repo": "goodcleanfun/sorting",
+  "repo": "goodcleanfun/sort",
   "description": "Generic header-only sorting routines in C",
   "keywords": ["sorting", "array", "generic"],
   "license": "MIT",
@@ -14,6 +14,7 @@
       "src/ksmall.h",
       "src/mergesort.h",
       "src/radixsort.h",
-      "src/shuffle.h"
+      "src/shuffle.h",
+      "src/sort.h"
   ]
 }
