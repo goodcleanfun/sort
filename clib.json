@@ -1,6 +1,6 @@
 {
   "name": "sort",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "repo": "goodcleanfun/sort",
   "description": "Generic header-only sorting routines in C",
   "keywords": ["sorting", "array", "generic"],
