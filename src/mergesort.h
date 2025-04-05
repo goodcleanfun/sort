@@ -65,6 +65,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #endif
 
@@ -94,7 +95,7 @@
 #define MERGESORT_CONCAT(a, b) MERGESORT_CONCAT_(a, b)
 #define MERGESORT_FUNC(name) MERGESORT_CONCAT(MERGESORT_NAME, _##name)
 
-static inline void MERGESORT_FUNC(mergesort)(size_t n, MERGESORT_TYPE array[], MERGESORT_TYPE temp[])
+static inline void MERGESORT_FUNC(mergesort_direction)(size_t n, MERGESORT_TYPE array[], MERGESORT_TYPE temp[], bool reverse)
 {
 	MERGESORT_TYPE *a2[2], *a, *b;
 	int curr, shift;
@@ -109,12 +110,11 @@ static inline void MERGESORT_FUNC(mergesort)(size_t n, MERGESORT_TYPE array[], M
 				if (i == eb - 1) *p++ = *i;
 				else {
 					#ifndef MERGESORT_AUX_TYPE
-					if (MERGESORT_LT(*(i+1), *i))
+					if (MERGESORT_LT(*(i+1), *i) ^ reverse)
 					#else
-					if (MERGESORT_LT(*(i+1), *i, aux))
+					if (MERGESORT_LT(*(i+1), *i, aux) ^ reverse)
 					#endif
 					{
-					
 						*p++ = *(i+1); *p++ = *i;
 					} else {
 						*p++ = *i; *p++ = *(i+1);
@@ -134,9 +134,9 @@ static inline void MERGESORT_FUNC(mergesort)(size_t n, MERGESORT_TYPE array[], M
 				j = a + i; k = a + i + step; p = b + i;
 				while (j < ea && k < eb) {
 					#ifndef MERGESORT_AUX_TYPE
-					if (MERGESORT_LT(*k, *j))
+					if (MERGESORT_LT(*k, *j) ^ reverse)
 					#else
-					if (MERGESORT_LT(*k, *j, aux))
+					if (MERGESORT_LT(*k, *j, aux) ^ reverse)
 					#endif
 					{
 						*p++ = *k++;
@@ -157,6 +157,17 @@ static inline void MERGESORT_FUNC(mergesort)(size_t n, MERGESORT_TYPE array[], M
 	if (temp == 0) free(a2[1]);
 }
 
+// Original function (ascending order)
+static inline void MERGESORT_FUNC(mergesort)(size_t n, MERGESORT_TYPE array[], MERGESORT_TYPE temp[])
+{
+	MERGESORT_FUNC(mergesort_direction)(n, array, temp, false);
+}
+
+// Reverse version (descending order)
+static inline void MERGESORT_FUNC(mergesort_reverse)(size_t n, MERGESORT_TYPE array[], MERGESORT_TYPE temp[])
+{
+	MERGESORT_FUNC(mergesort_direction)(n, array, temp, true);
+}
 
 #undef MERGESORT_CONCAT_
 #undef MERGESORT_CONCAT

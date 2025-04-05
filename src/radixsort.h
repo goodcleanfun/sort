@@ -66,6 +66,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <stdbool.h>
 
 #define RADIS_SORT_MIN_SIZE 64
 #define RADIS_SORT_MAX_BITS 8
@@ -99,20 +100,20 @@ typedef struct {
 	RADIX_SORT_TYPE *b, *e;
 } RADIX_SORT_BUCKET_TYPE;
 
-static inline void RADIX_SORT_FUNC(rs_insertsort)(RADIX_SORT_TYPE *beg, RADIX_SORT_TYPE *end)
+static inline void RADIX_SORT_FUNC(rs_insertsort_direction)(RADIX_SORT_TYPE *beg, RADIX_SORT_TYPE *end, bool reverse)
 {
 	RADIX_SORT_TYPE *i;
 	for (i = beg + 1; i < end; ++i) {
-		if (RADIX_SORT_KEY(*i) < RADIX_SORT_KEY(*(i - 1))) {
+		if ((RADIX_SORT_KEY(*i) < RADIX_SORT_KEY(*(i - 1))) ^ reverse) {
 			RADIX_SORT_TYPE *j, tmp = *i;
-			for (j = i; j > beg && RADIX_SORT_KEY(tmp) < RADIX_SORT_KEY(*(j-1)); --j)
+			for (j = i; j > beg && (RADIX_SORT_KEY(tmp) < RADIX_SORT_KEY(*(j-1))) ^ reverse; --j)
 				*j = *(j - 1);
 			*j = tmp;
 		}
 	}
 }
 
-static inline void RADIX_SORT_FUNC(rs_sort)(RADIX_SORT_TYPE *beg, RADIX_SORT_TYPE *end, int n_bits, int s)
+static inline void RADIX_SORT_FUNC(rs_sort_direction)(RADIX_SORT_TYPE *beg, RADIX_SORT_TYPE *end, int n_bits, int s, bool reverse)
 {
 	RADIX_SORT_TYPE *i;
 	int size = 1<<n_bits, m = size - 1;
@@ -140,15 +141,47 @@ static inline void RADIX_SORT_FUNC(rs_sort)(RADIX_SORT_TYPE *beg, RADIX_SORT_TYP
 	if (s) {
 		s = s > n_bits? s - n_bits : 0;
 		for (k = b; k != be; ++k)
-			if (k->e - k->b > RADIS_SORT_MIN_SIZE) RADIX_SORT_FUNC(rs_sort)(k->b, k->e, n_bits, s);
-			else if (k->e - k->b > 1) RADIX_SORT_FUNC(rs_insertsort)(k->b, k->e);
+			if (k->e - k->b > RADIS_SORT_MIN_SIZE) RADIX_SORT_FUNC(rs_sort_direction)(k->b, k->e, n_bits, s, reverse);
+			else if (k->e - k->b > 1) RADIX_SORT_FUNC(rs_insertsort_direction)(k->b, k->e, reverse);
 	}
+}
+
+static inline void RADIX_SORT_FUNC(radix_sort_direction)(RADIX_SORT_TYPE *beg, RADIX_SORT_TYPE *end, bool reverse)
+{
+	if (end - beg <= RADIS_SORT_MIN_SIZE) RADIX_SORT_FUNC(rs_insertsort_direction)(beg, end, reverse);
+	else RADIX_SORT_FUNC(rs_sort_direction)(beg, end, RADIS_SORT_MAX_BITS, (RADIX_SORT_KEY_SIZE - 1) * RADIS_SORT_MAX_BITS, reverse);
+}
+
+// Original functions (ascending order)
+static inline void RADIX_SORT_FUNC(rs_insertsort)(RADIX_SORT_TYPE *beg, RADIX_SORT_TYPE *end)
+{
+	RADIX_SORT_FUNC(rs_insertsort_direction)(beg, end, false);
+}
+
+static inline void RADIX_SORT_FUNC(rs_sort)(RADIX_SORT_TYPE *beg, RADIX_SORT_TYPE *end, int n_bits, int s)
+{
+	RADIX_SORT_FUNC(rs_sort_direction)(beg, end, n_bits, s, false);
 }
 
 static inline void RADIX_SORT_FUNC(radix_sort)(RADIX_SORT_TYPE *beg, RADIX_SORT_TYPE *end)
 {
-	if (end - beg <= RADIS_SORT_MIN_SIZE) RADIX_SORT_FUNC(rs_insertsort)(beg, end);
-	else RADIX_SORT_FUNC(rs_sort)(beg, end, RADIS_SORT_MAX_BITS, (RADIX_SORT_KEY_SIZE - 1) * RADIS_SORT_MAX_BITS);
+	RADIX_SORT_FUNC(radix_sort_direction)(beg, end, false);
+}
+
+// Reverse versions (descending order)
+static inline void RADIX_SORT_FUNC(rs_insertsort_reverse)(RADIX_SORT_TYPE *beg, RADIX_SORT_TYPE *end)
+{
+	RADIX_SORT_FUNC(rs_insertsort_direction)(beg, end, true);
+}
+
+static inline void RADIX_SORT_FUNC(rs_sort_reverse)(RADIX_SORT_TYPE *beg, RADIX_SORT_TYPE *end, int n_bits, int s)
+{
+	RADIX_SORT_FUNC(rs_sort_direction)(beg, end, n_bits, s, true);
+}
+
+static inline void RADIX_SORT_FUNC(radix_sort_reverse)(RADIX_SORT_TYPE *beg, RADIX_SORT_TYPE *end)
+{
+	RADIX_SORT_FUNC(radix_sort_direction)(beg, end, true);
 }
 
 #undef RADIX_SORT_CONCAT_

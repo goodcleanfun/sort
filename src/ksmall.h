@@ -65,6 +65,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #endif
 
@@ -96,25 +97,25 @@
 
 /* This function is adapted from: http://ndevilla.free.fr/median/ */
 /* 0 <= kk < n */
-static inline KSMALL_TYPE KSMALL_FUNC(ksmall)(size_t n, KSMALL_TYPE arr[], size_t kk)
+static inline KSMALL_TYPE KSMALL_FUNC(ksmall_direction)(size_t n, KSMALL_TYPE arr[], size_t kk, bool reverse)
 {
 	KSMALL_TYPE *low, *high, *k, *ll, *hh, *mid;
 	low = arr; high = arr + n - 1; k = arr + kk;
 	for (;;) {
 		if (high <= low) return *k;
 		if (high == low + 1) {
-			if (KSMALL_LT(*high, *low)) KSMALL_SWAP(KSMALL_TYPE, *low, *high);
+			if (KSMALL_LT(*high, *low) ^ reverse) KSMALL_SWAP(KSMALL_TYPE, *low, *high);
 			return *k;
 		}
 		mid = low + (high - low) / 2;
-		if (KSMALL_LT(*high, *mid)) KSMALL_SWAP(KSMALL_TYPE, *mid, *high);
-		if (KSMALL_LT(*high, *low)) KSMALL_SWAP(KSMALL_TYPE, *low, *high);
-		if (KSMALL_LT(*low, *mid)) KSMALL_SWAP(KSMALL_TYPE, *mid, *low);
+		if (KSMALL_LT(*high, *mid) ^ reverse) KSMALL_SWAP(KSMALL_TYPE, *mid, *high);
+		if (KSMALL_LT(*high, *low) ^ reverse) KSMALL_SWAP(KSMALL_TYPE, *low, *high);
+		if (KSMALL_LT(*low, *mid) ^ reverse) KSMALL_SWAP(KSMALL_TYPE, *mid, *low);
 		KSMALL_SWAP(KSMALL_TYPE, *mid, *(low+1));
 		ll = low + 1; hh = high;
 		for (;;) {
-			do ++ll; while (KSMALL_LT(*ll, *low));
-			do --hh; while (KSMALL_LT(*low, *hh));
+			do ++ll; while (KSMALL_LT(*ll, *low) ^ reverse);
+			do --hh; while (KSMALL_LT(*low, *hh) ^ reverse);
 			if (hh < ll) break;
 			KSMALL_SWAP(KSMALL_TYPE, *ll, *hh);
 		}
@@ -122,6 +123,18 @@ static inline KSMALL_TYPE KSMALL_FUNC(ksmall)(size_t n, KSMALL_TYPE arr[], size_
 		if (hh <= k) low = ll;
 		if (hh >= k) high = hh - 1;
 	}
+}
+
+// Original function (ascending order)
+static inline KSMALL_TYPE KSMALL_FUNC(ksmall)(size_t n, KSMALL_TYPE arr[], size_t kk)
+{
+	return KSMALL_FUNC(ksmall_direction)(n, arr, kk, false);
+}
+
+// Reverse version (descending order)
+static inline KSMALL_TYPE KSMALL_FUNC(ksmall_reverse)(size_t n, KSMALL_TYPE arr[], size_t kk)
+{
+	return KSMALL_FUNC(ksmall_direction)(n, arr, kk, true);
 }
 
 #ifdef KSMALL_LT_DEFINED

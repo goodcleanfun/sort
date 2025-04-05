@@ -65,6 +65,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #endif
 
@@ -94,40 +95,72 @@
 #define HEAPSORT_CONCAT(a, b) HEAPSORT_CONCAT_(a, b)
 #define HEAPSORT_FUNC(name) HEAPSORT_CONCAT(HEAPSORT_NAME, _##name)
 
-
-static inline void HEAPSORT_FUNC(heapadjust)(size_t i, size_t n, HEAPSORT_TYPE l[])
+static inline void HEAPSORT_FUNC(heapadjust_direction)(size_t i, size_t n, HEAPSORT_TYPE l[], bool reverse)
 {
 	size_t k = i;
 	HEAPSORT_TYPE tmp = l[i];
 	while ((k = (k << 1) + 1) < n) {
 		#ifndef HEAPSORT_AUX_TYPE
-		if (k != n - 1 && HEAPSORT_LT(l[k], l[k+1])) ++k;
-		if (HEAPSORT_LT(l[k], tmp)) break;
+		if (k != n - 1 && (HEAPSORT_LT(l[k], l[k+1]) ^ reverse)) ++k;
+		if (HEAPSORT_LT(l[k], tmp) ^ reverse) break;
 		#else
-		if (k != n - 1 && HEAPSORT_LT(l[k], l[k+1], aux)) ++k;
-		if (HEAPSORT_LT(l[k], tmp, aux)) break;
+		if (k != n - 1 && (HEAPSORT_LT(l[k], l[k+1], aux) ^ reverse)) ++k;
+		if (HEAPSORT_LT(l[k], tmp, aux) ^ reverse) break;
 		#endif
 		l[i] = l[k]; i = k;
 	}
 	l[i] = tmp;
 }
 
-static inline void HEAPSORT_FUNC(heapmake)(size_t lsize, HEAPSORT_TYPE l[])
+static inline void HEAPSORT_FUNC(heapmake_direction)(size_t lsize, HEAPSORT_TYPE l[], bool reverse)
 {
 	size_t i;
 	for (i = (lsize >> 1) - 1; i != (size_t)(-1); --i)
-		HEAPSORT_FUNC(heapadjust)(i, lsize, l);
+		HEAPSORT_FUNC(heapadjust_direction)(i, lsize, l, reverse);
+}
+
+static inline void HEAPSORT_FUNC(heapsort_direction)(size_t lsize, HEAPSORT_TYPE l[], bool reverse)
+{
+	size_t i;
+	HEAPSORT_FUNC(heapmake_direction)(lsize, l, reverse);
+	for (i = lsize - 1; i > 0; --i) {
+		HEAPSORT_TYPE tmp;
+		tmp = *l; *l = l[i]; l[i] = tmp; 
+		HEAPSORT_FUNC(heapadjust_direction)(0, i, l, reverse);
+	}
+}
+
+// Original functions without direction parameter (ascending order)
+static inline void HEAPSORT_FUNC(heapadjust)(size_t i, size_t n, HEAPSORT_TYPE l[])
+{
+	HEAPSORT_FUNC(heapadjust_direction)(i, n, l, false);
+}
+
+static inline void HEAPSORT_FUNC(heapmake)(size_t lsize, HEAPSORT_TYPE l[])
+{
+	HEAPSORT_FUNC(heapmake_direction)(lsize, l, false);
 }
 
 static inline void HEAPSORT_FUNC(heapsort)(size_t lsize, HEAPSORT_TYPE l[])
 {
-	size_t i;
-	for (i = lsize - 1; i > 0; --i) {
-		HEAPSORT_TYPE tmp;
-		tmp = *l; *l = l[i]; l[i] = tmp; HEAPSORT_FUNC(heapadjust)(0, i, l);
-	}
+	HEAPSORT_FUNC(heapsort_direction)(lsize, l, false);
 }
 
+// Reverse versions (descending order)
+static inline void HEAPSORT_FUNC(heapadjust_reverse)(size_t i, size_t n, HEAPSORT_TYPE l[])
+{
+	HEAPSORT_FUNC(heapadjust_direction)(i, n, l, true);
+}
+
+static inline void HEAPSORT_FUNC(heapmake_reverse)(size_t lsize, HEAPSORT_TYPE l[])
+{
+	HEAPSORT_FUNC(heapmake_direction)(lsize, l, true);
+}
+
+static inline void HEAPSORT_FUNC(heapsort_reverse)(size_t lsize, HEAPSORT_TYPE l[])
+{
+	HEAPSORT_FUNC(heapsort_direction)(lsize, l, true);
+}
 
 #undef HEAPSORT_CONCAT_
 #undef HEAPSORT_CONCAT

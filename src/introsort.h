@@ -28,6 +28,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 typedef struct {
 	void *left, *right;
@@ -62,19 +63,18 @@ typedef struct {
 #define INTROSORT_CONCAT(a, b) INTROSORT_CONCAT_(a, b)
 #define INTROSORT_FUNC(name) INTROSORT_CONCAT(INTROSORT_NAME, _##name)
 
-
 #ifndef INTROSORT_AUX_TYPE
-static inline void INTROSORT_FUNC(insertsort)(INTROSORT_TYPE *s, INTROSORT_TYPE *t)
+static inline void INTROSORT_FUNC(insertsort)(INTROSORT_TYPE *s, INTROSORT_TYPE *t, bool reverse)
 #else
-static inline void INTROSORT_FUNC(insertsort)(INTROSORT_TYPE *s, INTROSORT_TYPE *t, INTROSORT_AUX_TYPE *aux)
+static inline void INTROSORT_FUNC(insertsort)(INTROSORT_TYPE *s, INTROSORT_TYPE *t, INTROSORT_AUX_TYPE *aux, bool reverse)
 #endif
 {
 	INTROSORT_TYPE *i, *j, swap_tmp;
 	for (i = s + 1; i < t; ++i)
 		#ifndef INTROSORT_AUX_TYPE
-		for (j = i; j > s && INTROSORT_LT(*j, *(j-1)); --j)
+		for (j = i; j > s && INTROSORT_LT(*j, *(j-1)) ^ reverse; --j)
 		#else
-		for (j = i; j > s && INTROSORT_LT(*j, *(j-1), aux); --j)
+		for (j = i; j > s && INTROSORT_LT(*j, *(j-1), aux) ^ reverse; --j)
 		#endif
 		{
 			swap_tmp = *j; *j = *(j-1); *(j-1) = swap_tmp;
@@ -82,9 +82,9 @@ static inline void INTROSORT_FUNC(insertsort)(INTROSORT_TYPE *s, INTROSORT_TYPE 
 }
 
 #ifndef INTROSORT_AUX_TYPE
-static inline void INTROSORT_FUNC(combsort)(size_t n, INTROSORT_TYPE a[])
+static inline void INTROSORT_FUNC(combsort)(size_t n, INTROSORT_TYPE a[], bool reverse)
 #else
-static inline void INTROSORT_FUNC(combsort)(size_t n, INTROSORT_TYPE a[], INTROSORT_AUX_TYPE *aux)
+static inline void INTROSORT_FUNC(combsort)(size_t n, INTROSORT_TYPE a[], INTROSORT_AUX_TYPE *aux, bool reverse)
 #endif
 {
 	const double shrink_factor = 1.2473309501039786540366528676643;
@@ -100,9 +100,9 @@ static inline void INTROSORT_FUNC(combsort)(size_t n, INTROSORT_TYPE a[], INTROS
 		for (i = a; i < a + n - gap; ++i) {
 			j = i + gap;
 			#ifndef INTROSORT_AUX_TYPE
-			if (INTROSORT_LT(*j, *i))
+			if (INTROSORT_LT(*j, *i) ^ reverse)
 			#else
-			if (INTROSORT_LT(*j, *i, aux))
+			if (INTROSORT_LT(*j, *i, aux) ^ reverse)
 			#endif 
 			{
 				tmp = *i; *i = *j; *j = tmp;
@@ -112,17 +112,17 @@ static inline void INTROSORT_FUNC(combsort)(size_t n, INTROSORT_TYPE a[], INTROS
 	} while (do_swap || gap > 2);
 	if (gap != 1) {
 		#ifndef INTROSORT_AUX_TYPE
-		INTROSORT_FUNC(insertsort)(a, a + n);
+		INTROSORT_FUNC(insertsort)(a, a + n, reverse);
 		#else
-		INTROSORT_FUNC(insertsort)(a, a + n, aux);
+		INTROSORT_FUNC(insertsort)(a, a + n, aux, reverse);
 		#endif
 	}
 }
 
 #ifndef INTROSORT_AUX_TYPE
-static inline void INTROSORT_FUNC(introsort)(size_t n, INTROSORT_TYPE a[])
+static void INTROSORT_FUNC(introsort_direction)(size_t n, INTROSORT_TYPE a[], bool reverse)
 #else
-static inline void INTROSORT_FUNC(introsort)(size_t n, INTROSORT_TYPE a[], INTROSORT_AUX_TYPE *aux)
+static void INTROSORT_FUNC(introsort_direction)(size_t n, INTROSORT_TYPE a[], INTROSORT_AUX_TYPE *aux, bool reverse)
 #endif
 {
 	int d;
@@ -133,10 +133,11 @@ static inline void INTROSORT_FUNC(introsort)(size_t n, INTROSORT_TYPE a[], INTRO
 	if (n < 1) return;
 	else if (n == 2) {
 		#ifndef INTROSORT_AUX_TYPE
-		if (INTROSORT_LT(a[1], a[0])) { swap_tmp = a[0]; a[0] = a[1]; a[1] = swap_tmp; }
+		if (INTROSORT_LT(a[1], a[0]) ^ reverse)
 		#else
-		if (INTROSORT_LT(a[1], a[0], aux)) { swap_tmp = a[0]; a[0] = a[1]; a[1] = swap_tmp; }
+		if (INTROSORT_LT(a[1], a[0], aux) ^ reverse)
 		#endif
+		{ swap_tmp = a[0]; a[0] = a[1]; a[1] = swap_tmp; }
 		return;
 	}
 	for (d = 2; 1ul<<d < n; ++d);
@@ -146,32 +147,32 @@ static inline void INTROSORT_FUNC(introsort)(size_t n, INTROSORT_TYPE a[], INTRO
 		if (s < t) {
 			if (--d == 0) {
 				#ifndef INTROSORT_AUX_TYPE
-				INTROSORT_FUNC(combsort)(t - s + 1, s);
+				INTROSORT_FUNC(combsort)(t - s + 1, s, reverse);
 				#else
-				INTROSORT_FUNC(combsort)(t - s + 1, s, aux);
+				INTROSORT_FUNC(combsort)(t - s + 1, s, aux, reverse);
 				#endif
 				t = s;
 				continue;
 			}
 			i = s; j = t; k = i + ((j-i)>>1) + 1;
 			#ifndef INTROSORT_AUX_TYPE
-			if (INTROSORT_LT(*k, *i)) {
-				if (INTROSORT_LT(*k, *j)) k = j;
-			} else k = INTROSORT_LT(*j, *i)? i : j;
+			if (INTROSORT_LT(*k, *i) ^ reverse) {
+				if (INTROSORT_LT(*k, *j) ^ reverse) k = j;
+			} else k = (INTROSORT_LT(*j, *i) ^ reverse)? i : j;
 			#else
-			if (INTROSORT_LT(*k, *i, aux)) {
-				if (INTROSORT_LT(*k, *j, aux)) k = j;
-			} else k = INTROSORT_LT(*j, *i, aux)? i : j;
+			if (INTROSORT_LT(*k, *i, aux) ^ reverse) {
+				if (INTROSORT_LT(*k, *j, aux) ^ reverse) k = j;
+			} else k = (INTROSORT_LT(*j, *i, aux) ^ reverse)? i : j;
 			#endif
 			rp = *k;
 			if (k != t) { swap_tmp = *k; *k = *t; *t = swap_tmp; }
 			for (;;) {
 				#ifndef INTROSORT_AUX_TYPE
-				do ++i; while (INTROSORT_LT(*i, rp));
-				do --j; while (i <= j && INTROSORT_LT(rp, *j));
+				do ++i; while (INTROSORT_LT(*i, rp) ^ reverse);
+				do --j; while (i <= j && (INTROSORT_LT(rp, *j) ^ reverse));
 				#else
-				do ++i; while (INTROSORT_LT(*i, rp, aux));
-				do --j; while (i <= j && INTROSORT_LT(rp, *j, aux));
+				do ++i; while (INTROSORT_LT(*i, rp, aux) ^ reverse);
+				do --j; while (i <= j && (INTROSORT_LT(rp, *j, aux) ^ reverse));
 				#endif
 				if (j <= i) break;
 				swap_tmp = *i; *i = *j; *j = swap_tmp;
@@ -188,15 +189,34 @@ static inline void INTROSORT_FUNC(introsort)(size_t n, INTROSORT_TYPE a[], INTRO
 			if (top == stack) {
 				free(stack);
 				#ifndef INTROSORT_AUX_TYPE
-				INTROSORT_FUNC(insertsort)(a, a+n);
+				INTROSORT_FUNC(insertsort)(a, a+n, reverse);
 				#else
-				INTROSORT_FUNC(insertsort)(a, a+n, aux);
+				INTROSORT_FUNC(insertsort)(a, a+n, aux, reverse);
 				#endif
 				return;
 			} else { --top; s = (INTROSORT_TYPE*)top->left; t = (INTROSORT_TYPE*)top->right; d = top->depth; }
 		}
 	}
 }
+
+#ifndef INTROSORT_AUX_TYPE
+static inline void INTROSORT_FUNC(introsort)(size_t n, INTROSORT_TYPE a[]) {
+	INTROSORT_FUNC(introsort_direction)(n, a, false);
+}
+
+static inline void INTROSORT_FUNC(introsort_reverse)(size_t n, INTROSORT_TYPE a[]) {
+	INTROSORT_FUNC(introsort_direction)(n, a, true);
+}
+#else
+static inline void INTROSORT_FUNC(introsort)(size_t n, INTROSORT_TYPE a[], INTROSORT_AUX_TYPE *aux) {
+	INTROSORT_FUNC(introsort_direction)(n, a, aux, false);
+}
+
+static inline void INTROSORT_FUNC(introsort_reverse)(size_t n, INTROSORT_TYPE a[], INTROSORT_AUX_TYPE *aux) {
+	INTROSORT_FUNC(introsort_direction)(n, a, aux, true);
+}
+#endif
+
 
 #undef INTROSORT_CONCAT_
 #undef INTROSORT_CONCAT
