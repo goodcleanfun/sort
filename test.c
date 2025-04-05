@@ -2,25 +2,70 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#define ARRAY_NAME array
+#define ARRAY_TYPE int
+#include "sort.h"
+#undef ARRAY_NAME
+#undef ARRAY_TYPE
+
 #define HEAPSORT_TYPE int
 #include "heapsort.h"
+#undef HEAPSORT_TYPE
 
 #define INTROSORT_TYPE int
 #include "introsort.h"
+#undef INTROSORT_TYPE
 
 #define KSMALL_TYPE int
 #include "ksmall.h"
+#undef KSMALL_TYPE
 
 #define MERGESORT_TYPE int
 #include "mergesort.h"
+#undef MERGESORT_TYPE
 
 #define RADIX_SORT_TYPE int
 #include "radixsort.h"
+#undef RADIX_SORT_TYPE
 
 #define SHUFFLE_TYPE int
 #include "shuffle.h"
+#undef SHUFFLE_TYPE
 
 #include "greatest/greatest.h"
+
+
+TEST test_sort(void) {
+    int a[] = {9, 4, 3, 5, 2, 1, 6, 7, 10, 8, 16, 12, 13, 15, 14, 11};
+    size_t n = sizeof(a) / sizeof(int);
+    size_t *order = malloc(sizeof(size_t) * n);
+    ASSERT(array_argsort(a, n, order));
+    for (size_t i = 1; i < n; i++) {
+        ASSERT_GT(a[order[i]], a[order[i - 1]]);
+    }
+    ASSERT(array_sort(a, n));
+    for (size_t i = 0; i < n; i++) {
+        ASSERT_EQ(a[i], i + 1);
+    }
+    ASSERT(array_argsort(a, n, order));
+    for (size_t i = 0; i < n; i++) {
+        ASSERT_EQ(order[i], i);
+    }
+    ASSERT(array_argsort_reverse(a, n, order));
+    for (size_t i = 0; i < n; i++) {
+        ASSERT_EQ(order[i], n - i - 1);
+    }
+    ASSERT(array_sort_reverse(a, n));
+    for (size_t i = 0; i < n; i++) {
+        ASSERT_EQ(a[i], n - i);
+    }
+    ASSERT(array_argsort(a, n, order));
+    for (size_t i = 0; i < n; i++) {
+        ASSERT_EQ(order[i], n - i - 1);
+    }
+    free(order);
+    PASS();
+}
 
 TEST test_heapsort(void) {
     int a[] = {9, 4, 3, 5, 2, 1, 6, 7, 10, 8, 16, 12, 13, 15, 14, 11};
@@ -88,6 +133,8 @@ GREATEST_MAIN_DEFS();
 
 int main(int argc, char **argv) {
     GREATEST_MAIN_BEGIN();      /* command-line options, initialization. */
+
+    RUN_TEST(test_sort);
 
     RUN_TEST(test_heapsort);
     RUN_TEST(test_introsort);
