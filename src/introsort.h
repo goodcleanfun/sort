@@ -60,7 +60,7 @@ typedef struct {
 
 #define INTROSORT_CONCAT_(a, b) a ## b
 #define INTROSORT_CONCAT(a, b) INTROSORT_CONCAT_(a, b)
-#define INTROSORT_FUNC(name) INTROSORT_CONCAT(name##_, INTROSORT_NAME)
+#define INTROSORT_FUNC(name) INTROSORT_CONCAT(INTROSORT_NAME, _##name)
 
 
 #ifndef INTROSORT_AUX_TYPE

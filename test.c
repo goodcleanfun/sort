@@ -25,8 +25,8 @@
 TEST test_heapsort(void) {
     int a[] = {9, 4, 3, 5, 2, 1, 6, 7, 10, 8, 16, 12, 13, 15, 14, 11};
     size_t n = sizeof(a) / sizeof(int);
-    heapmake_int(n, a);
-    heapsort_int(n, a);
+    int_heapmake(n, a);
+    int_heapsort(n, a);
     for (size_t i = 0; i < n; i++) {
         ASSERT_EQ(a[i], i + 1);
     }
@@ -36,7 +36,7 @@ TEST test_heapsort(void) {
 TEST test_introsort(void) {
     int a[] = {9, 4, 3, 5, 2, 1, 6, 7, 10, 8, 16, 12, 13, 15, 14, 11};
     size_t n = sizeof(a) / sizeof(int);
-    introsort_int(n, a);
+    int_introsort(n, a);
     for (size_t i = 0; i < n; i++) {
         ASSERT_EQ(a[i], i + 1);
     }
@@ -46,7 +46,7 @@ TEST test_introsort(void) {
 TEST test_mergesort(void) {
     int a[] = {9, 4, 3, 5, 2, 1, 6, 7, 10, 8, 16, 12, 13, 15, 14, 11};
     size_t n = sizeof(a) / sizeof(int);
-    mergesort_int(n, a, NULL);
+    int_mergesort(n, a, NULL);
     for (size_t i = 0; i < n; i++) {
         ASSERT_EQ(a[i], i + 1);
     }
@@ -56,7 +56,7 @@ TEST test_mergesort(void) {
 TEST test_radix_sort(void) {
     int a[] = {9, 4, 3, 5, 2, 1, 6, 7, 10, 8, 16, 12, 13, 15, 14, 11};
     size_t n = sizeof(a) / sizeof(int);
-    radix_sort_int(a, a + n);
+    int_radix_sort(a, a + n);
 
     for (size_t i = 0; i < n; i++) {
         ASSERT_EQ(a[i], i + 1);
@@ -69,7 +69,7 @@ TEST test_ksmall(void) {
     int a[] = {9, 4, 3, 5, 2, 1, 6, 7, 10, 8, 16, 12, 13, 15, 14, 11};
     size_t n = sizeof(a) / sizeof(int);
     int k = n / 2;
-    int ksmall = ksmall_int(n, a, k);
+    int ksmall = int_ksmall(n, a, k);
     ASSERT_EQ(ksmall, k + 1);
     PASS();
 }

@@ -92,7 +92,7 @@
 
 #define KSMALL_CONCAT_(a, b) a ## b
 #define KSMALL_CONCAT(a, b) KSMALL_CONCAT_(a, b)
-#define KSMALL_FUNC(name) KSMALL_CONCAT(name##_, KSMALL_NAME)
+#define KSMALL_FUNC(name) KSMALL_CONCAT(KSMALL_NAME, _##name)
 
 /* This function is adapted from: http://ndevilla.free.fr/median/ */
 /* 0 <= kk < n */

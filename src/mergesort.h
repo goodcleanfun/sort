@@ -92,7 +92,7 @@
 
 #define MERGESORT_CONCAT_(a, b) a ## b
 #define MERGESORT_CONCAT(a, b) MERGESORT_CONCAT_(a, b)
-#define MERGESORT_FUNC(name) MERGESORT_CONCAT(name##_, MERGESORT_NAME)
+#define MERGESORT_FUNC(name) MERGESORT_CONCAT(MERGESORT_NAME, _##name)
 
 static inline void MERGESORT_FUNC(mergesort)(size_t n, MERGESORT_TYPE array[], MERGESORT_TYPE temp[])
 {

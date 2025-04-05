@@ -92,7 +92,7 @@
 
 #define HEAPSORT_CONCAT_(a, b) a ## b
 #define HEAPSORT_CONCAT(a, b) HEAPSORT_CONCAT_(a, b)
-#define HEAPSORT_FUNC(name) HEAPSORT_CONCAT(name##_, HEAPSORT_NAME)
+#define HEAPSORT_FUNC(name) HEAPSORT_CONCAT(HEAPSORT_NAME, _##name)
 
 
 static inline void HEAPSORT_FUNC(heapadjust)(size_t i, size_t n, HEAPSORT_TYPE l[])
