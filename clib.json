@@ -14,7 +14,6 @@
       "src/ksmall.h",
       "src/mergesort.h",
       "src/radixsort.h",
-      "src/shuffle.h",
-      "src/sort.h"
+      "src/shuffle.h"
   ]
 }
