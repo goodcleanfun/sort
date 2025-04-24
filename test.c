@@ -2,12 +2,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define ARRAY_NAME array
-#define ARRAY_TYPE int
-#include "sort.h"
-#undef ARRAY_NAME
-#undef ARRAY_TYPE
-
 #define HEAPSORT_TYPE int
 #include "heapsort.h"
 #undef HEAPSORT_TYPE
